@@ -80,6 +80,22 @@ class PizzaExpertSystem:
             return results[0]["Steps"]
         return []
     
+    def get_pizza_types(self):
+        """Get list of available pizza types"""
+        query = "get_pizza_types(PizzaTypes)"
+        results = list(self.prolog.query(query))
+        if results:
+            return results[0]["PizzaTypes"]
+        return []
+    
+    def get_pizza_ingredients(self, pizza_type):
+        """Get all ingredients needed for a specific pizza type"""
+        query = f"get_pizza_ingredients({pizza_type}, AllIngredients)"
+        results = list(self.prolog.query(query))
+        if results:
+            return results[0]["AllIngredients"]
+        return []
+    
     def _python_list_to_prolog(self, py_list):
         """Convert Python list to Prolog list format"""
         return "[" + ",".join(py_list) + "]"
@@ -104,13 +120,163 @@ class PizzaGUI:
         self.user_toppings = []
         self.chosen_pizza = None
         
-        # Start with base ingredients screen
-        self.show_base_ingredients()
+        # Start with welcome screen
+        self.show_welcome_screen()
     
     def clear_window(self):
         """Clear all widgets from window"""
         for widget in self.root.winfo_children():
             widget.destroy()
+    
+    def show_welcome_screen(self):
+        """Welcome screen with two main choices"""
+        self.clear_window()
+        
+        # Title
+        title = tk.Label(self.root, text="🍕 Pizza Maker Expert System", 
+                        font=("Arial", 24, "bold"), bg="#f0f0f0", fg="#333")
+        title.pack(pady=50)
+        
+        # Subtitle
+        subtitle = tk.Label(self.root, text="Welcome! How would you like to proceed?", 
+                           font=("Arial", 16), bg="#f0f0f0", fg="#666")
+        subtitle.pack(pady=30)
+        
+        # Main choices frame
+        choices_frame = tk.Frame(self.root, bg="#f0f0f0")
+        choices_frame.pack(pady=50)
+        
+        # Option A: I already have ingredients
+        have_btn = tk.Button(choices_frame, 
+                            text="🥫 I Already Have Ingredients\n\nSelect what I have and start making pizza", 
+                            command=self.show_base_ingredients,
+                            font=("Arial", 14, "bold"), bg="#4CAF50", fg="white",
+                            padx=40, pady=30, cursor="hand2", relief=tk.RAISED, bd=3,
+                            wraplength=300, justify="center")
+        have_btn.pack(pady=20)
+        
+        # Option B: Show me ingredients
+        show_btn = tk.Button(choices_frame, 
+                            text="📋 Show Me Ingredients\n\nI want to see what ingredients I need", 
+                            command=self.show_ingredients_info,
+                            font=("Arial", 14, "bold"), bg="#2196F3", fg="white",
+                            padx=40, pady=30, cursor="hand2", relief=tk.RAISED, bd=3,
+                            wraplength=300, justify="center")
+        show_btn.pack(pady=20)
+    
+    def show_ingredients_info(self):
+        """Show pizza type selection for ingredients information"""
+        self.clear_window()
+        
+        # Title
+        title = tk.Label(self.root, text="📋 Pizza Ingredients Information", 
+                        font=("Arial", 18, "bold"), bg="#f0f0f0", fg="#333")
+        title.pack(pady=30)
+        
+        # Instruction
+        instruction = tk.Label(self.root, text="Select a pizza type to see all required ingredients:", 
+                              font=("Arial", 14), bg="#f0f0f0", fg="#666")
+        instruction.pack(pady=20)
+        
+        # Main content frame
+        frame = tk.Frame(self.root, bg="white", relief=tk.RIDGE, bd=2)
+        frame.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
+        
+        # Get available pizza types
+        pizza_types = self.expert.get_pizza_types()
+        
+        # Create buttons for each pizza type
+        for pizza_type in pizza_types:
+            btn = tk.Button(frame, 
+                           text=f"🍕 {pizza_type.replace('_', ' ').title()} Pizza", 
+                           command=lambda p=pizza_type: self.show_pizza_ingredients(p),
+                           font=("Arial", 14, "bold"), bg="#FF9800", fg="white",
+                           padx=30, pady=15, cursor="hand2", relief=tk.RAISED, bd=2)
+            btn.pack(pady=15, padx=20, fill=tk.X)
+        
+        # Navigation buttons
+        buttons_frame = tk.Frame(self.root, bg="#f0f0f0")
+        buttons_frame.pack(pady=20)
+        
+        # Back to welcome button
+        back_btn = tk.Button(buttons_frame, text="← Back to Welcome", 
+                            command=self.show_welcome_screen,
+                            font=("Arial", 12, "bold"), bg="#607D8B", fg="white",
+                            padx=20, pady=10, cursor="hand2")
+        back_btn.pack(side=tk.LEFT, padx=10)
+        
+    
+    def show_pizza_ingredients(self, pizza_type):
+        """Show all ingredients needed for selected pizza type"""
+        self.clear_window()
+        
+        # Title
+        title = tk.Label(self.root, 
+                        text=f"🍕 Ingredients for {pizza_type.replace('_', ' ').title()} Pizza", 
+                        font=("Arial", 18, "bold"), bg="#f0f0f0", fg="#333")
+        title.pack(pady=20)
+        
+        # Main content frame with scrollbar
+        canvas = tk.Canvas(self.root, bg="white", height=450)
+        scrollbar = tk.Scrollbar(self.root, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg="white")
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill="both", expand=True, padx=(40, 0), pady=20)
+        scrollbar.pack(side="right", fill="y", pady=20, padx=(0, 40))
+        
+        # Get all ingredients for this pizza type
+        all_ingredients = self.expert.get_pizza_ingredients(pizza_type)
+        essential = self.expert.get_essential_base_ingredients()
+        extra = self.expert.get_extra_base_ingredients()
+        
+        # Essential Base Ingredients Section
+        essential_title = tk.Label(scrollable_frame, text="Essential Base Ingredients (Required):", 
+                                  font=("Arial", 14, "bold"), bg="white", fg="#d32f2f")
+        essential_title.pack(anchor="w", padx=20, pady=(20, 10))
+        
+        for ing in essential:
+            ingredient_label = tk.Label(scrollable_frame, text=f"✓ {ing.replace('_', ' ').title()}", 
+                                       font=("Arial", 12), bg="white", fg="#d32f2f")
+            ingredient_label.pack(anchor="w", padx=40, pady=3)
+        
+        # Extra Base Ingredients Section
+        extra_title = tk.Label(scrollable_frame, text="\nExtra Base Ingredients (Optional but recommended):", 
+                              font=("Arial", 14, "bold"), bg="white", fg="#FF9800")
+        extra_title.pack(anchor="w", padx=20, pady=(20, 10))
+        
+        for ing in extra:
+            ingredient_label = tk.Label(scrollable_frame, text=f"◦ {ing.replace('_', ' ').title()}", 
+                                       font=("Arial", 12), bg="white", fg="#FF9800")
+            ingredient_label.pack(anchor="w", padx=40, pady=3)
+        
+        # Required Toppings Section
+        pizza_toppings = [ing for ing in all_ingredients if ing not in essential and ing not in extra]
+        
+        if pizza_toppings:
+            toppings_title = tk.Label(scrollable_frame, text=f"\nRequired Toppings for {pizza_type.replace('_', ' ').title()}:", 
+                                     font=("Arial", 14, "bold"), bg="white", fg="#4CAF50")
+            toppings_title.pack(anchor="w", padx=20, pady=(20, 10))
+            
+            for ing in pizza_toppings:
+                ingredient_label = tk.Label(scrollable_frame, text=f"• {ing.replace('_', ' ').title()}", 
+                                           font=("Arial", 12), bg="white", fg="#4CAF50")
+                ingredient_label.pack(anchor="w", padx=40, pady=3)
+        
+        # Back button (centered below the scrolled list)
+        back_btn = tk.Button(self.root, text="← Back to Pizza Types", 
+                            command=self.show_ingredients_info,
+                            font=("Arial", 12, "bold"), bg="#607D8B", fg="white",
+                            padx=20, pady=10, cursor="hand2")
+        back_btn.pack(pady=20)
+    
     
     def show_base_ingredients(self):
         """Screen 1: Select base ingredients"""
@@ -133,11 +299,7 @@ class PizzaGUI:
         essential = self.expert.get_essential_base_ingredients()
         extra = self.expert.get_extra_base_ingredients()
         
-        # Essential section
-        essential_label = tk.Label(frame, text="Essential Ingredients:", 
-                                   font=("Arial", 12, "bold"), bg="white")
-        essential_label.pack(anchor="w", padx=20, pady=(20, 5))
-        
+        # Essential section        
         self.base_vars = {}
         for ing in essential:
             var = tk.BooleanVar()
@@ -146,11 +308,7 @@ class PizzaGUI:
             cb.pack(anchor="w", padx=40, pady=2)
             self.base_vars[ing] = var
         
-        # Extra section
-        extra_label = tk.Label(frame, text="\nExtra Ingredients:", 
-                              font=("Arial", 12, "bold"), bg="white")
-        extra_label.pack(anchor="w", padx=20, pady=(10, 5))
-        
+        # Extra section  
         for ing in extra:
             var = tk.BooleanVar()
             cb = tk.Checkbutton(frame, text=ing.replace("_", " ").title(), 
@@ -224,12 +382,12 @@ class PizzaGUI:
         buttons_frame = tk.Frame(self.root, bg="#f0f0f0")
         buttons_frame.pack(pady=20)
         
-        # List missing ingredients button
-        list_btn = tk.Button(buttons_frame, text="📋 List Missing Ingredients", 
-                            command=self.show_missing_ingredients_list,
-                            font=("Arial", 12, "bold"), bg="#FF9800", fg="white",
-                            padx=20, pady=10, cursor="hand2")
-        list_btn.pack(side=tk.LEFT, padx=10)
+        # See ingredients button
+        see_ingredients_btn = tk.Button(buttons_frame, text="📋 See Ingredients", 
+                                       command=self.show_ingredients_info,
+                                       font=("Arial", 12, "bold"), bg="#2196F3", fg="white",
+                                       padx=20, pady=10, cursor="hand2")
+        see_ingredients_btn.pack(side=tk.LEFT, padx=10)
         
         # Quit button
         quit_btn = tk.Button(buttons_frame, text="❌ Quit", 
@@ -341,7 +499,7 @@ class PizzaGUI:
             self.topping_vars[ing] = var
         
         # Analyze button
-        analyze_btn = tk.Button(self.root, text="Analyze Toppings →", 
+        analyze_btn = tk.Button(self.root, text="go →", 
                                command=self.analyze_toppings,
                                font=("Arial", 12, "bold"), bg="#2196F3", fg="white",
                                padx=30, pady=10, cursor="hand2")
@@ -360,11 +518,73 @@ class PizzaGUI:
         makeable_pizzas = self.expert.find_makeable_pizzas(self.user_toppings)
         
         if not makeable_pizzas:
-            messagebox.showerror("No Pizzas Available", 
-                               "Cannot make any pizza with these toppings!")
+            # Navigate to missing toppings view instead of popup
+            self.show_missing_toppings_view()
             return
         
         self.show_pizza_selection(makeable_pizzas)
+    
+    def show_missing_toppings_view(self):
+        """Show view when user is missing required toppings"""
+        self.clear_window()
+        
+        # Title
+        title = tk.Label(self.root, text="❌ Missing Required Toppings", 
+                        font=("Arial", 18, "bold"), bg="#f0f0f0", fg="#d32f2f")
+        title.pack(pady=30)
+        
+        # Main message
+        message = tk.Label(self.root, text="You are missing toppings", 
+                          font=("Arial", 16, "bold"), bg="#f0f0f0", fg="#333")
+        message.pack(pady=20)
+        
+        # Frame for information
+        frame = tk.Frame(self.root, bg="white", relief=tk.RIDGE, bd=2)
+        frame.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
+        
+        # Information message
+        info_label = tk.Label(frame, text="Cannot make any pizza with the toppings you have selected.", 
+                             font=("Arial", 12), bg="white", fg="#666")
+        info_label.pack(pady=(20, 10))
+        
+        # Show selected toppings
+        if self.user_toppings:
+            selected_label = tk.Label(frame, text="Your selected toppings:", 
+                                     font=("Arial", 12, "bold"), bg="white", fg="#333")
+            selected_label.pack(pady=(20, 10))
+            
+            for topping in self.user_toppings:
+                topping_label = tk.Label(frame, text=f"• {topping.replace('_', ' ').title()}", 
+                                        font=("Arial", 11), bg="white", fg="#666")
+                topping_label.pack(anchor="w", padx=40, pady=2)
+        
+        # Suggestion message
+        suggestion_msg = tk.Label(frame, text="\nTo make a pizza, you need the right combination of toppings.\nCheck the ingredient requirements for different pizza types.", 
+                                 font=("Arial", 11), bg="white", fg="#666", justify="center")
+        suggestion_msg.pack(pady=20)
+        
+        # Help message
+        help_msg = tk.Label(frame, text="\nWhat would you like to do?", 
+                           font=("Arial", 12, "bold"), bg="white", fg="#333")
+        help_msg.pack(pady=20)
+        
+        # Buttons frame
+        buttons_frame = tk.Frame(self.root, bg="#f0f0f0")
+        buttons_frame.pack(pady=20)
+        
+        # See ingredients button
+        see_ingredients_btn = tk.Button(buttons_frame, text="📋 See Ingredients", 
+                                       command=self.show_ingredients_info,
+                                       font=("Arial", 12, "bold"), bg="#2196F3", fg="white",
+                                       padx=20, pady=10, cursor="hand2")
+        see_ingredients_btn.pack(side=tk.LEFT, padx=10)
+        
+        # Quit button
+        quit_btn = tk.Button(buttons_frame, text="❌ Quit", 
+                            command=self.quit_application,
+                            font=("Arial", 12, "bold"), bg="#f44336", fg="white",
+                            padx=30, pady=10, cursor="hand2")
+        quit_btn.pack(side=tk.LEFT, padx=10)
     
     def show_pizza_selection(self, makeable_pizzas):
         """Screen 3: Choose pizza type"""

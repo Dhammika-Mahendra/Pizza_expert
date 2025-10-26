@@ -18,8 +18,8 @@ topping_ingredient(olive_oil).
 topping_ingredient(oregano).
 
 % Pizza topping requirements
-pizza_toppings(margherita, [fresh_tomato_slices, fresh_mozzarella]).
-pizza_toppings(pepperoni, [tomato_sauce, mozzarella_cheese]).
+pizza_toppings(margherita, [fresh_tomato_slices, fresh_mozzarella,olive_oil]).
+pizza_toppings(pepperoni, [tomato_sauce, mozzarella_cheese,pepperoni_slices,oregano]).
 
 % Messages for missing extra ingredients
 missing_extra_effect(sugar, "Slower yeast rise, less browning").
@@ -80,3 +80,19 @@ generate_steps(PizzaType, UserExtras, Steps) :-
     findall(ToppingStep, topping_step(PizzaType, _, ToppingStep), ToppingSteps),
     append(BaseSteps, ExtraSteps, TempSteps),
     append(TempSteps, ToppingSteps, Steps).
+
+% Get all available pizza types
+get_pizza_types(PizzaTypes) :-
+    findall(Pizza, pizza_toppings(Pizza, _), PizzaTypes).
+
+% Get all ingredients needed for a specific pizza type
+get_pizza_ingredients(PizzaType, AllIngredients) :-
+    % Get essential base ingredients
+    findall(Ing, essential_base(Ing), EssentialBase),
+    % Get extra base ingredients  
+    findall(Ing, extra_base(Ing), ExtraBase),
+    % Get required toppings for this pizza type
+    pizza_toppings(PizzaType, RequiredToppings),
+    % Combine all ingredients
+    append(EssentialBase, ExtraBase, BaseIngredients),
+    append(BaseIngredients, RequiredToppings, AllIngredients).
