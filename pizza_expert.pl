@@ -15,10 +15,13 @@ topping_ingredient(olive_oil).
 topping_ingredient(tomato_sauce).
 topping_ingredient(mozzarella_cheese).
 topping_ingredient(pepperoni_slices).
+topping_ingredient(onions).
+topping_ingredient(mushrooms).
 
 % Pizza topping requirements
 pizza_toppings(margherita, [fresh_tomato_slices,fresh_mozzarella,olive_oil]).
 pizza_toppings(pepperoni, [tomato_sauce,mozzarella_cheese,pepperoni_slices]).
+pizza_toppings(vegetarian, [tomato_sauce,mozzarella_cheese,onions,mushrooms]).
 
 % Messages for missing extra ingredients
 missing_extra_effect(sugar, "Slower yeast rise, less browning").
@@ -82,13 +85,18 @@ extra_step(sugar, "Add sugar to the mix").
 extra_step(semolina, "Add semolina to the mix").
 
 % Pizza-specific topping steps
-topping_step(margherita, 1, "Add fresh tomato slices").
-topping_step(margherita, 2, "Add fresh mozzarella").
+topping_step(margherita, 1, "Put fresh tomato slices").
+topping_step(margherita, 2, "Sprinkle fresh mozzarella slices").
 topping_step(margherita, 3, "Drizzle olive oil").
 
 topping_step(pepperoni, 1, "Spread tomato sauce").
 topping_step(pepperoni, 2, "Add mozzarella cheese").
-topping_step(pepperoni, 3, "Add pepperoni slices").
+topping_step(pepperoni, 3, "Put pepperoni slices").
+
+topping_step(vegetarian, 1, "Spread tomato sauce").
+topping_step(vegetarian, 2, "Add mozzarella cheese").
+topping_step(vegetarian, 3, "Add onion rings").
+topping_step(vegetarian, 4, "Add mushroom slices").
 
 % Generate complete step list for a pizza
 generate_steps(PizzaType, UserExtras, Steps) :-
