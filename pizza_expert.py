@@ -45,6 +45,15 @@ class PizzaExpertSystem:
             return results[0]["Missing"]
         return []
     
+    def find_missing_essential(self, user_base):
+        """Find missing essential base ingredients"""
+        prolog_list = self._python_list_to_prolog(user_base)
+        query = f"find_missing_essential({prolog_list}, Missing)"
+        results = list(self.prolog.query(query))
+        if results:
+            return results[0]["Missing"]
+        return []
+    
     def get_missing_extra_effect(self, ingredient):
         """Get effect message for missing extra ingredient"""
         query = f"missing_extra_effect({ingredient}, Effect)"
@@ -376,19 +385,24 @@ class PizzaGUI:
                           font=("Arial", 12, "bold"), bg="white", fg="red")
         miss.pack(pady=20)
         
-        # Get essential ingredients
-        essential = self.expert.get_essential_base_ingredients()
+        # Get missing essential ingredients based on user selection
+        missing_essential = self.expert.find_missing_essential(self.user_base)
         
-        info_label = tk.Label(frame, text="To make a pizza base, you need ALL of these essential ingredients:", 
+        info_label = tk.Label(frame, text="You are missing these essential ingredients:", 
                              font=("Arial", 12), bg="white", fg="#666")
-        info_label.pack(pady=(20, 10))
-        
-        # List essential ingredients
-        for ing in essential:
+        info_label.pack(anchor="w", pady=(20, 10))
+
+        # List missing essential ingredients
+        for ing in missing_essential:
             ingredient_label = tk.Label(frame, text=f"• {ing.replace('_', ' ').title()}", 
-                                       font=("Arial", 12), bg="white", fg="#666")
+                                       font=("Arial", 12), bg="white", fg="red")
             ingredient_label.pack(anchor="w", padx=40, pady=5)
         
+        # Additional info about essentials
+        additional_info = tk.Label(frame, text="\nTo make a pizza base, you need all essential ingredients.", 
+                                  font=("Arial", 11), bg="white", fg="#666")
+        additional_info.pack(anchor="w", pady=(20, 10))
+
         # Buttons frame
         buttons_frame = tk.Frame(self.root, bg="#f0f0f0")
         buttons_frame.pack(pady=20)

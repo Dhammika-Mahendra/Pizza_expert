@@ -11,15 +11,14 @@ extra_base(semolina).
 % Topping ingredients
 topping_ingredient(fresh_tomato_slices).
 topping_ingredient(fresh_mozzarella).
+topping_ingredient(olive_oil).
 topping_ingredient(tomato_sauce).
 topping_ingredient(mozzarella_cheese).
 topping_ingredient(pepperoni_slices).
-topping_ingredient(olive_oil).
-topping_ingredient(oregano).
 
 % Pizza topping requirements
-pizza_toppings(margherita, [fresh_tomato_slices, fresh_mozzarella,olive_oil]).
-pizza_toppings(pepperoni, [tomato_sauce, mozzarella_cheese,pepperoni_slices,oregano]).
+pizza_toppings(margherita, [fresh_tomato_slices,fresh_mozzarella,olive_oil]).
+pizza_toppings(pepperoni, [tomato_sauce,mozzarella_cheese,pepperoni_slices]).
 
 % Messages for missing extra ingredients
 missing_extra_effect(sugar, "Slower yeast rise, less browning").
@@ -30,6 +29,10 @@ has_essential_base(UserIngredients) :-
     member(flour, UserIngredients),
     member(water, UserIngredients),
     member(salt, UserIngredients).
+
+% Find missing essential base ingredients
+find_missing_essential(UserIngredients, MissingEssential) :-
+    findall(Ing, (essential_base(Ing), \+ member(Ing, UserIngredients)), MissingEssential).
 
 % Find missing extra base ingredients
 find_missing_extra(UserIngredients, MissingExtra) :-
