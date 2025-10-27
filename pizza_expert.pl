@@ -1,5 +1,3 @@
-% Pizza Maker Expert System Knowledge Base
-
 % Base ingredients
 essential_base(flour).
 essential_base(water).
@@ -26,6 +24,30 @@ pizza_toppings(vegetarian, [tomato_sauce,mozzarella_cheese,onions,mushrooms]).
 % Messages for missing extra ingredients
 missing_extra_effect(sugar, "Slower yeast rise, less browning").
 missing_extra_effect(semolina, "Crustless crisp, more doughy").
+
+% Basic steps for pizza base
+base_step(1, "Mix flour, water, and salt").
+base_step(2, "Knead the dough").
+base_step(3, "Flatten the dough").
+
+% Extra ingredient steps
+extra_step(sugar, "Add sugar to the mix").
+extra_step(semolina, "Add semolina to the mix").
+
+% Pizza-specific topping steps
+topping_step(margherita, 1, "Put fresh tomato slices").
+topping_step(margherita, 2, "Sprinkle fresh mozzarella slices").
+topping_step(margherita, 3, "Drizzle olive oil").
+
+topping_step(pepperoni, 1, "Spread tomato sauce").
+topping_step(pepperoni, 2, "Add mozzarella cheese").
+topping_step(pepperoni, 3, "Put pepperoni slices").
+
+topping_step(vegetarian, 1, "Spread tomato sauce").
+topping_step(vegetarian, 2, "Add mozzarella cheese").
+topping_step(vegetarian, 3, "Add onion rings").
+topping_step(vegetarian, 4, "Add mushroom slices").
+
 
 % Check if user has all essential base ingredients
 has_essential_base(UserIngredients) :-
@@ -75,28 +97,6 @@ missing_toppings_by_pizza(UserToppings, MissingByPizza) :-
             ),
             MissingByPizza).
 
-% Basic steps for pizza base
-base_step(1, "Mix flour, water, and salt").
-base_step(2, "Knead the dough").
-base_step(3, "Flatten the dough").
-
-% Extra ingredient steps
-extra_step(sugar, "Add sugar to the mix").
-extra_step(semolina, "Add semolina to the mix").
-
-% Pizza-specific topping steps
-topping_step(margherita, 1, "Put fresh tomato slices").
-topping_step(margherita, 2, "Sprinkle fresh mozzarella slices").
-topping_step(margherita, 3, "Drizzle olive oil").
-
-topping_step(pepperoni, 1, "Spread tomato sauce").
-topping_step(pepperoni, 2, "Add mozzarella cheese").
-topping_step(pepperoni, 3, "Put pepperoni slices").
-
-topping_step(vegetarian, 1, "Spread tomato sauce").
-topping_step(vegetarian, 2, "Add mozzarella cheese").
-topping_step(vegetarian, 3, "Add onion rings").
-topping_step(vegetarian, 4, "Add mushroom slices").
 
 % Generate complete step list for a pizza
 generate_steps(PizzaType, UserExtras, Steps) :-
