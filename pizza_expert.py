@@ -74,6 +74,36 @@ class PizzaExpertSystem:
         if results:
             return results[0]["Pizzas"]
         return []
+
+    # NEW: get missing toppings by pizza from Prolog
+    def missing_toppings_by_pizza(self, user_toppings):
+        prolog_list = self._python_list_to_prolog(user_toppings)
+        query = f"missing_toppings_by_pizza({prolog_list}, MissingByPizza)"
+        results = list(self.prolog.query(query))
+        if not results:
+            return []
+        data = results[0]["MissingByPizza"]
+        # PySwip may return bytes atoms; normalize to strings
+        normalized = []
+        for item in data:
+            # item is a structure missing(Pizza, MissingList)
+            if hasattr(item, 'args') and len(item.args) == 2:
+                pizza = item.args[0]
+                missing_list = item.args[1]
+            else:
+                # fallback if returned as tuple-like
+                pizza, missing_list = item
+            if isinstance(pizza, bytes):
+                pizza = pizza.decode('utf-8')
+            # Ensure list items decoded
+            decoded_missing = []
+            for m in missing_list:
+                if isinstance(m, bytes):
+                    decoded_missing.append(m.decode('utf-8'))
+                else:
+                    decoded_missing.append(m)
+            normalized.append((pizza, decoded_missing))
+        return normalized
     
     def get_user_extras(self, user_base):
         """Get which extra ingredients user has"""
@@ -309,7 +339,7 @@ class PizzaGUI:
         """Screen 1: Select base ingredients"""
         self.clear_window()
         
-        subtitle = tk.Label(self.root, text="STEP 1: Select Base Ingredients", 
+        subtitle = tk.Label(self.root, text="STEP 1: Select Base Ingredients you have", 
                            font=("Arial", 12, "bold"), bg="#f0f0f0", fg="#666")
         subtitle.pack(pady=10)
         
@@ -486,7 +516,7 @@ class PizzaGUI:
         self.clear_window()
         
         # Title
-        title = tk.Label(self.root, text="STEP 2: Select Topping Ingredients", 
+        title = tk.Label(self.root, text="STEP 2: Select Topping Ingredients you have", 
                         font=("Arial", 12, "bold"), bg="#f0f0f0", fg="#333")
         title.pack(pady=20)
         
@@ -544,38 +574,52 @@ class PizzaGUI:
         frame = tk.Frame(self.root, bg="white", relief=tk.RIDGE, bd=2)
         frame.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
         
-                # Success message
-        miss = tk.Label(frame, text="❌ Missing Required Toppings", 
-                          font=("Arial", 12, "bold"), bg="white", fg="red")
-        miss.pack(pady=20)
+        title = tk.Label(frame, text="❌ You can't make any pizza with selected toppings", 
+                         font=("Arial", 12, "bold"), bg="white", fg="red")
+        title.pack(pady=10)
 
-        # Information message
-        info_label = tk.Label(frame, text="Cannot make any pizza with the toppings you have selected.", 
-                             font=("Arial", 12), bg="white", fg="#666")
-        info_label.pack(pady=(20, 10))
-        
-        # Show selected toppings
-        if self.user_toppings:
-            selected_label = tk.Label(frame, text="Your selected toppings:", 
-                                     font=("Arial", 12, "bold"), bg="white", fg="#333")
-            selected_label.pack(pady=(20, 10))
-            
-            for topping in self.user_toppings:
-                topping_label = tk.Label(frame, text=f"• {topping.replace('_', ' ').title()}", 
-                                        font=("Arial", 11), bg="white", fg="#666")
-                topping_label.pack(anchor="w", padx=40, pady=2)
+        # Query Prolog for each pizza's missing toppings
+        missing_by_pizza = self.expert.missing_toppings_by_pizza(self.user_toppings)
+
+        if missing_by_pizza:
+            info = tk.Label(frame, text="Missing toppings by pizza:", 
+                            font=("Arial", 12), bg="white", fg="#666")
+            info.pack(anchor="w", padx=20, pady=(10, 5))
+
+            for pizza, missing_list in missing_by_pizza:
+                pizza_name = pizza.replace('_', ' ').title() if isinstance(pizza, str) else str(pizza)
+                pizza_label = tk.Label(frame, text=f"• {pizza_name}", 
+                                       font=("Arial", 12, "bold"), bg="white", fg="#333")
+                pizza_label.pack(anchor="w", padx=30, pady=(8, 2))
+                for ing in missing_list:
+                    ing_name = ing.replace('_', ' ').title() if isinstance(ing, str) else str(ing)
+                    ing_label = tk.Label(frame, text=f"   - {ing_name}", 
+                                         font=("Arial", 11), bg="white", fg="#666")
+                    ing_label.pack(anchor="w", padx=50, pady=1)
+        else:
+            # Fallback message
+            info = tk.Label(frame, text="No pizza definitions found in knowledge base.", 
+                            font=("Arial", 12), bg="white", fg="#666")
+            info.pack(anchor="w", padx=20, pady=(10, 5))
         
         # Buttons frame
         buttons_frame = tk.Frame(self.root, bg="#f0f0f0")
         buttons_frame.pack(pady=20)
         
+        # Back button to reselect toppings
+        back_btn = tk.Button(buttons_frame, text="← Back", 
+                            command=self.show_topping_ingredients,
+                            font=("Arial", 12, "bold"), bg="#666", fg="white",
+                            padx=30, pady=10, cursor="hand2")
+        back_btn.pack(side=tk.LEFT, padx=10)
+
         # See ingredients button
         see_ingredients_btn = tk.Button(buttons_frame, text="📋 See Ingredients", 
                                        command=self.show_ingredients_info,
                                        font=("Arial", 12, "bold"), bg="#2196F3", fg="white",
                                        padx=20, pady=10, cursor="hand2")
         see_ingredients_btn.pack(side=tk.LEFT, padx=10)
-        
+    
         # Quit button
         quit_btn = tk.Button(buttons_frame, text="❌ Quit", 
                             command=self.quit_application,
@@ -592,7 +636,7 @@ class PizzaGUI:
         self.clear_window()
         
         # Title
-        title = tk.Label(self.root, text="STEP 3: Select Pizza Type", 
+        title = tk.Label(self.root, text="STEP 3: Select Pizza Type you want", 
                         font=("Arial", 12, "bold"), bg="#f0f0f0", fg="#666")
         title.pack(pady=20)
         

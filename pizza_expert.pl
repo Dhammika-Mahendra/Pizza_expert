@@ -57,6 +57,21 @@ find_makeable_pizzas(UserToppings, MakeablePizzas) :-
 get_user_extras(UserBase, UserExtras) :-
     findall(Ing, (member(Ing, UserBase), extra_base(Ing)), UserExtras).
 
+% --- NEW: Missing toppings per pizza ---
+% Compute which required toppings are missing for a given pizza
+missing_toppings_for_pizza(UserToppings, PizzaType, MissingToppings) :-
+    pizza_toppings(PizzaType, RequiredToppings),
+    findall(Ing, (member(Ing, RequiredToppings), \+ member(Ing, UserToppings)), MissingToppings).
+
+% Collect all pizzas that are not makeable and their missing toppings
+missing_toppings_by_pizza(UserToppings, MissingByPizza) :-
+    findall([Pizza, Missing],
+            ( pizza_toppings(Pizza, _),
+              missing_toppings_for_pizza(UserToppings, Pizza, Missing),
+              Missing \= []
+            ),
+            MissingByPizza).
+
 % Basic steps for pizza base
 base_step(1, "Mix flour, water, and salt").
 base_step(2, "Knead the dough").
@@ -74,7 +89,6 @@ topping_step(margherita, 3, "Drizzle olive oil").
 topping_step(pepperoni, 1, "Spread tomato sauce").
 topping_step(pepperoni, 2, "Add mozzarella cheese").
 topping_step(pepperoni, 3, "Add pepperoni slices").
-topping_step(pepperoni, 4, "Sprinkle oregano").
 
 % Generate complete step list for a pizza
 generate_steps(PizzaType, UserExtras, Steps) :-
