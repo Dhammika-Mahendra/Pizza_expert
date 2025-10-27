@@ -289,6 +289,9 @@ class PizzaGUI:
                             padx=20, pady=10, cursor="hand2")
         back_btn.pack(side=tk.LEFT, padx=10)
     
+    ##########
+    ##   2
+    ##########
     ##################################################################################
     #        Show Base Ingredients
     ##################################################################################
@@ -331,6 +334,10 @@ class PizzaGUI:
                             font=("Arial", 12, "bold"), bg="#4CAF50", fg="white",
                             padx=30, pady=10, cursor="hand2")
         next_btn.pack(pady=20)
+
+    ##################################################################################
+    #        Analyze Base Ingredients
+    ##################################################################################
     
     def analyze_base(self):
         """Analyze base ingredients and show results"""
@@ -351,6 +358,10 @@ class PizzaGUI:
         
         # Show results
         self.show_base_results()
+
+    ##################################################################################
+    #        Show Missing base Ingredients View
+    ##################################################################################
     
     def show_missing_ingredients_view(self):
         """Show view when user is missing essential base ingredients"""
@@ -382,12 +393,12 @@ class PizzaGUI:
         buttons_frame = tk.Frame(self.root, bg="#f0f0f0")
         buttons_frame.pack(pady=20)
         
-        # See ingredients button
-        see_ingredients_btn = tk.Button(buttons_frame, text="📋 See Ingredients", 
-                                       command=self.show_ingredients_info,
-                                       font=("Arial", 12, "bold"), bg="#2196F3", fg="white",
-                                       padx=20, pady=10, cursor="hand2")
-        see_ingredients_btn.pack(side=tk.LEFT, padx=10)
+        # Back button
+        back_btn = tk.Button(buttons_frame, text="← Back", 
+                            command=self.show_base_ingredients,
+                            font=("Arial", 12, "bold"), bg="#666", fg="white",
+                            padx=30, pady=10, cursor="hand2")
+        back_btn.pack(side=tk.LEFT, padx=10)
         
         # Quit button
         quit_btn = tk.Button(buttons_frame, text="❌ Quit", 
@@ -400,6 +411,10 @@ class PizzaGUI:
         """Quit the application"""
         self.root.quit()
         self.root.destroy()
+
+    ##################################################################################
+    #        Show base results if ok
+    ##################################################################################
     
     def show_base_results(self):
         """Show base analysis results"""
@@ -448,6 +463,10 @@ class PizzaGUI:
         continue_btn.pack(side=tk.LEFT, padx=10)
 
     
+    ##################################################################################
+    #        Show Topping Ingredients Selection
+    ##################################################################################
+
     def show_topping_ingredients(self):
         """Screen 2: Select topping ingredients"""
         self.clear_window()
@@ -498,6 +517,10 @@ class PizzaGUI:
             return
         
         self.show_pizza_selection(makeable_pizzas)
+
+    ##################################################################################
+    #        If toppings missing view
+    ##################################################################################
     
     def show_missing_toppings_view(self):
         """Show view when user is missing required toppings"""
@@ -545,7 +568,11 @@ class PizzaGUI:
                             font=("Arial", 12, "bold"), bg="#f44336", fg="white",
                             padx=30, pady=10, cursor="hand2")
         quit_btn.pack(side=tk.LEFT, padx=10)
-    
+
+    ##################################################################################
+    #        Show pizza topping selection
+    ##################################################################################
+
     def show_pizza_selection(self, makeable_pizzas):
         """Screen 3: Choose pizza type"""
         self.clear_window()
@@ -587,6 +614,10 @@ class PizzaGUI:
         """Select pizza and show steps"""
         self.chosen_pizza = pizza_type
         self.show_steps()
+
+    ##################################################################################
+    #        Show pizza preparation steps
+    ##################################################################################
     
     def show_steps(self):
         """Screen 4: Show preparation steps"""
